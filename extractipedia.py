@@ -25,7 +25,7 @@ class WikiText():
         self.group = self.domtree.documentElement
         self.elements = self.group.getElementsByTagName('page')
 
-        self.dir_path = os.path.dirname(os.path.realpath(__file__))
+        self.dir_path = os.path.dirname(os.path.realpath('./'))
 
         self.titles = []
         self.texts = []
@@ -70,10 +70,12 @@ class WikiText():
                   've', 'fj', 'koi', 'gcr', 'iu', 'ki', 'roa-rup', 'guw',
                   'krc', 'rn', 'kbp', 'pwn', 'pi', 'sg', 'ik', 'srn', 'lbe']
         
-        self.LANGUAGE_CODES_BETWEEN_BRACKETS = [(":"+x+":") for x in self.LANGUAGE_CODES]
+        self.LANGUAGE_CODES_BETWEEN_COLONS = [(":"+x+":") for x in self.LANGUAGE_CODES]
 
         self.IGNORE_THE_EXTRA_CONTENT = ['File:', 'Category:']
-        self.IGNORE_SECTION = ['reference', 'references', 'see also', 'completed']
+        self.IGNORE_SECTION = ['reference', 'Reference', 'References', 'references', 'REFERENCE', 'REFERENCES',
+                               'see also', 'See also', 'See Also', 'SEE ALSO', 'see Also',
+                               'completed', 'Completed', 'COMPLETED']
         self.IGNORE_REDIRECTS = ['#REDIRECT', '#redirect', '#Redirect']
         self.ENTITIES = ['&nbsp;', '&lt;', '&gt;', '&amp;', '&quot;',	
         '&apos;', '&cent;', '&pound;', '&yen;' '&euro;', '&copy;', '&reg;']
@@ -119,13 +121,13 @@ class WikiText():
         
         for idx, title_text in self.extraction.items():
             if xid == idx:
-                print("CHECKED BY ID: ", title_text[1])
+                print("Checked by ID: ", title_text[1])
 
     def clean_by_id(self, xid):
 
         for idx, title_text in self.extraction.items():
             if xid == idx:
-                print('Cleaning by id: ', xid)
+                print('Cleaning by ID: ', xid)
                 temp_dict = self.cleaning_text(chunk=False, by_id=True, one_id = xid)
                 print(temp_dict)
 
@@ -155,7 +157,7 @@ class WikiText():
             titles, ids, texts = self.split_page(chunk)
 
         for title, id, text in zip(titles, ids, texts):
-
+            
             #Checks the page and removes extra contents such as files and categories.
             for extra in self.IGNORE_THE_EXTRA_CONTENT:
                 _ = 0
@@ -197,61 +199,102 @@ class WikiText():
             closed_curly = 0 #Closed curly count
             open_idx = {} #Open curlies and indexes.
             closed_idx = {} #Closed curlies and indexes.
-
-            _equals = [0]
-
+            
+            _seperated = []
+            _equals = []
+            
+            SEPERATOR = False
+            
             for letter in text:
                 idx += 1
                 if letter == '{':
                     open_curly += 1 #Incrementing the open_curly.
                     open_idx.update({open_curly:idx})
-
+                    SEPERATOR = True
                 elif letter == '}':
                     closed_curly += 1 #Incrementing the closed_curly.
                     closed_idx.update({closed_curly:idx})
+                    SEPERATOR = False
                 else:
                     continue
-
                 #For getting the same nested curly bracket.
                 if open_curly == closed_curly:
-                    _equals.append(closed_curly)
-                    
-            #Reversed lists to not cause errors during indexing.
-            _seperated = [(i+1) for i in _equals[:-1]][::-1]
-            _equals = _equals[1:][::-1]
-
-            _temp = list(text)
-            
+                    _equals.append(idx)
+                    SEPERATOR = False
+                
+                elif (open_curly == closed_curly + 1) and SEPERATOR:
+                    _seperated.append(idx)
+                else:
+                    continue
             #Removing the curly bracket sections and the text inside.
-            for k, v in zip(_seperated, _equals):
-                start_index = open_idx[k]
-                end_index = closed_idx[v]
-                del _temp[start_index:end_index]
+            _temp = list(text)
+            for k, v in zip(_seperated[::-1], _equals[::-1]):
+                start_idx = k
+                end_idx = v+1
+                del _temp[start_idx:end_idx]
             text = ''.join(_temp)
-
-            #We're accessing the data between the double brackets and check if it's useful or not for us. (Alias Remover)
-            for part in re.findall(r'\[\[.+?\]\]', text):
+            
+            #We're accessing the data between the double brackets and check if it's useful for us or not. (Alias Remover)
+            for part in re.findall(r'\[\[.+?\]\]', text, flags=re.DOTALL):
                 if '|' in part:
-                    second = part.split('|')[1]
+                    second = part.split('|')[1].strip(']')
                     text = text.replace(part, second)
-
+            
             #We're gonna remove the HTML-like tags.
+            text = re.sub("<!-+(.*?)-+>", '', text, flags=re.DOTALL)
             #regex_ref = r'<'+re.escape('ref')+r'>.*?<'+re.escape('/ref')+r'>'
             #text = re.sub(regex_ref, '',text)
-            text = re.sub("<(.*?)>(.*?)</(.*?)>", '', text)
-            text = re.sub(r'<.*?>', '', text)
+            text = re.sub("<(.*?)>(.*?)</(.*?)>", '', text, flags=re.DOTALL)
+            #text = re.sub(r'<.*?>', '', text)
+            #text = re.sub("<(.*?)>(.|\n)*?</(.*?)>", '', text)
 
+            #Checks the page and removes extra contents such as files and categories.
+            """
+            for extra in self.IGNORE_THE_EXTRA_CONTENT:
+                _ = 0
+                _start = []
+                _end = []
+                while _ < len(text):
+                    index = text.find(extra, _)
+                    if index == -1:
+                        break
+                    _start.append(index-2)
+                    _ = index + 1
+                for idx in _start:
+                    idx += 2
+                    open_bracket_count = 2
+                    for _letter in text[idx:]:
+                        if open_bracket_count != 0:
+                            if _letter == ']':
+                                open_bracket_count -= 1
+                            elif _letter == '[':
+                                open_bracket_count += 1
+                            else:
+                                pass
+                            idx += 1
+                        else:
+                            break
+                    _end.append(idx)
+
+                #Reversed lists to not cause errors during indexing.    
+                reversed_start = _start[::-1]
+                reversed_end = _end[::-1]
+                for start, end in zip(reversed_start, reversed_end):
+                    sub = text[start:end]
+                    text = text.replace(sub, '')
+            """
             #We're gonna remove the wandering brackets.
             text = text.replace('[[','').replace(']]','')
             
             #Then we're gonna remove all the links in the text.
-            text = re.sub(r'http\S+', '', text)
-
+            #text = re.sub(r'http+', '', text) #p\S
+            text = re.sub(r'https?:\/\/.*[\r\n]*', '', text, flags=re.MULTILINE)
+            
             #Remove the part after 'IGNORE_SECTION'.
 
             _id = []
             for part in re.findall(r'=+(.*?)=+', text):
-                if part.lower() in self.IGNORE_SECTION:
+                if part.lower().strip() in self.IGNORE_SECTION:
                     _id.append(text.find(part))
                 else:
                     continue
@@ -259,6 +302,7 @@ class WikiText():
             if len(_id) != 0:
                 text = text[:min(_id)]
             
+            #Remove headlines, we don't need them.
             regex_symbol = re.compile(r'=+(.*?)=+')
             text = re.sub(regex_symbol, '', text)
 
@@ -270,9 +314,9 @@ class WikiText():
 
             #Remove the symbols we don't need.
 
-            symbols = ["'", "{", "}", "*"]
+            symbols = ["'", "{", "}", "*", '"', "(", ")", "[", "]"]
             for symbol in symbols:
-                text = text.replace(symbol, "")
+                text = text.replace(symbol, '')
 
             #Some additional regex for wikipedia format.
             one = re.compile(r'\n\|.*\n')
@@ -292,9 +336,10 @@ class WikiText():
             text = re.sub(space_regex, ' ', text)
             
             #Removing the trailing spaces, if there is any.
-            text = text.lstrip(' ')
-            title = title
+            text = text.lstrip(' ').rstrip(' ')
 
+            
+            title = title
             plain_text.update({title:[id,text]})
         return plain_text
     
