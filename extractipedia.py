@@ -25,12 +25,12 @@ class WikiText():
         self.group = self.domtree.documentElement
         self.elements = self.group.getElementsByTagName('page')
 
-        self.dir_path = os.path.dirname(os.path.realpath('./'))
+        self.dir_path = os.path.dirname(os.path.realpath(__file__))
 
         self.titles = []
         self.texts = []
         self.ids = []
-        #self.plain_text = {}
+        self.plain_text = {}
 
         self.extraction = {}
 
@@ -72,7 +72,7 @@ class WikiText():
         
         self.LANGUAGE_CODES_BETWEEN_COLONS = [(":"+x+":") for x in self.LANGUAGE_CODES]
 
-        self.IGNORE_THE_EXTRA_CONTENT = ['File:', 'Category:']
+        self.IGNORE_THE_EXTRA_CONTENT = ['[[File:', '[[Category:', '[[Image:']
         self.IGNORE_SECTION = ['reference', 'Reference', 'References', 'references', 'REFERENCE', 'REFERENCES',
                                'see also', 'See also', 'See Also', 'SEE ALSO', 'see Also',
                                'completed', 'Completed', 'COMPLETED']
@@ -157,41 +157,7 @@ class WikiText():
             titles, ids, texts = self.split_page(chunk)
 
         for title, id, text in zip(titles, ids, texts):
-            
-            #Checks the page and removes extra contents such as files and categories.
-            for extra in self.IGNORE_THE_EXTRA_CONTENT:
-                _ = 0
-                _start = []
-                _end = []
-                while _ < len(text):
-                    index = text.find(extra, _)
-                    if index == -1:
-                        break
-                    _start.append(index-2)
-                    _ = index + 1
-                for idx in _start:
-                    idx += 2
-                    open_bracket_count = 2
-                    for _letter in text[idx:]:
-                        if open_bracket_count != 0:
-                            if _letter == ']':
-                                open_bracket_count -= 1
-                            elif _letter == '[':
-                                open_bracket_count += 1
-                            else:
-                                pass
-                            idx += 1
-                        else:
-                            break
-                    _end.append(idx)
 
-                #Reversed lists to not cause errors during indexing.    
-                reversed_start = _start[::-1]
-                reversed_end = _end[::-1]
-                for start, end in zip(reversed_start, reversed_end):
-                    sub = text[start:end]
-                    text = text.replace(sub, '')
-            
             # ==CURLY BRACKET REMOVER== # 
 
             idx = -1 #Starting from -1 in order to begin indexing from 0 at the beginning of our for loop. "idx += 1"
@@ -226,6 +192,7 @@ class WikiText():
                     _seperated.append(idx)
                 else:
                     continue
+            
             #Removing the curly bracket sections and the text inside.
             _temp = list(text)
             for k, v in zip(_seperated[::-1], _equals[::-1]):
@@ -234,22 +201,7 @@ class WikiText():
                 del _temp[start_idx:end_idx]
             text = ''.join(_temp)
             
-            #We're accessing the data between the double brackets and check if it's useful for us or not. (Alias Remover)
-            for part in re.findall(r'\[\[.+?\]\]', text, flags=re.DOTALL):
-                if '|' in part:
-                    second = part.split('|')[1].strip(']')
-                    text = text.replace(part, second)
-            
-            #We're gonna remove the HTML-like tags.
-            text = re.sub("<!-+(.*?)-+>", '', text, flags=re.DOTALL)
-            #regex_ref = r'<'+re.escape('ref')+r'>.*?<'+re.escape('/ref')+r'>'
-            #text = re.sub(regex_ref, '',text)
-            text = re.sub("<(.*?)>(.*?)</(.*?)>", '', text, flags=re.DOTALL)
-            #text = re.sub(r'<.*?>', '', text)
-            #text = re.sub("<(.*?)>(.|\n)*?</(.*?)>", '', text)
-
             #Checks the page and removes extra contents such as files and categories.
-            """
             for extra in self.IGNORE_THE_EXTRA_CONTENT:
                 _ = 0
                 _start = []
@@ -282,7 +234,21 @@ class WikiText():
                 for start, end in zip(reversed_start, reversed_end):
                     sub = text[start:end]
                     text = text.replace(sub, '')
-            """
+            
+            #We're accessing the data between the double brackets and check if it's useful for us or not. (Alias Remover)
+            for part in re.findall(r'\[\[.+?\]\]', text, flags=re.DOTALL):
+                if '|' in part:
+                    second = part.split('|')[1].strip(']')
+                    text = text.replace(part, second)
+            
+            #We're gonna remove the HTML-like tags.
+            text = re.sub("<!-+(.*?)-+>", '', text, flags=re.DOTALL)
+            #regex_ref = r'<'+re.escape('ref')+r'>.*?<'+re.escape('/ref')+r'>'
+            #text = re.sub(regex_ref, '',text)
+            text = re.sub("<(.*?)>(.*?)</(.*?)>", '', text, flags=re.DOTALL)
+            text = re.sub(r'<.*?>', '', text)
+            #text = re.sub("<(.*?)>(.|\n)*?</(.*?)>", '', text)
+
             #We're gonna remove the wandering brackets.
             text = text.replace('[[','').replace(']]','')
             
@@ -340,8 +306,8 @@ class WikiText():
 
             
             title = title
-            plain_text.update({title:[id,text]})
-        return plain_text
+            self.plain_text.update({title:[id,text]})
+        return self.plain_text
     
     def write_out(self, _json=False):
 
@@ -350,7 +316,7 @@ class WikiText():
         if _json:
 
             with open(file_path_json, 'w') as j:
-                json.dump(self.plain_text, j, indent=2)
+                json.dump(self.plain_text, j, indent=2, ensure_ascii=False)
                 j.write('\n')
         else:
 
@@ -358,3 +324,12 @@ class WikiText():
                 w = csv.DictWriter(f, self.plain_text.keys())
                 w.writeheader()
                 w.writerow(self.plain_text)
+
+def main():    
+    App = WikiText(input_file)
+    extracted_file = App.cleaning_text()
+    App.write_out(_json=True)
+
+
+if __name__ == '__main__':
+    main()
