@@ -75,7 +75,8 @@ class WikiText():
         self.IGNORE_THE_EXTRA_CONTENT = ['[[File:', '[[Category:', '[[Image:']
         self.IGNORE_SECTION = ['reference', 'Reference', 'References', 'references', 'REFERENCE', 'REFERENCES',
                                'see also', 'See also', 'See Also', 'SEE ALSO', 'see Also',
-                               'completed', 'Completed', 'COMPLETED']
+                               'completed', 'Completed', 'COMPLETED',
+                               'track listing']
         self.IGNORE_REDIRECTS = ['#REDIRECT', '#redirect', '#Redirect']
         self.ENTITIES = ['&nbsp;', '&lt;', '&gt;', '&amp;', '&quot;',	
         '&apos;', '&cent;', '&pound;', '&yen;' '&euro;', '&copy;', '&reg;']
@@ -158,6 +159,23 @@ class WikiText():
 
         for title, id, text in zip(titles, ids, texts):
 
+            #We're gonna remove the HTML-like tags.
+
+            text = re.sub("<!-+(.*?)-+>", '', text, flags=re.DOTALL)
+            #text = re.sub(r'<.*?>', '', text)
+
+            #Remove the part after 'IGNORE_SECTION'.
+
+            _id = []
+            for part in re.findall(r'=+(.*?)=+', text):
+                if part.lower().strip() in self.IGNORE_SECTION:
+                    _id.append(text.find(part))
+                else:
+                    continue
+
+            if len(_id) != 0:
+                text = text[:min(_id)]
+
             # ==CURLY BRACKET REMOVER== # 
 
             idx = -1 #Starting from -1 in order to begin indexing from 0 at the beginning of our for loop. "idx += 1"
@@ -200,6 +218,9 @@ class WikiText():
                 end_idx = v+1
                 del _temp[start_idx:end_idx]
             text = ''.join(_temp)
+
+            #Remove HTML-like tag pairs.
+            text = re.sub("<(.*?)>(.*?)<\/(.*?)>", '', text, flags=re.DOTALL)
             
             #Checks the page and removes extra contents such as files and categories.
             for extra in self.IGNORE_THE_EXTRA_CONTENT:
@@ -210,7 +231,7 @@ class WikiText():
                     index = text.find(extra, _)
                     if index == -1:
                         break
-                    _start.append(index-2)
+                    _start.append(index)
                     _ = index + 1
                 for idx in _start:
                     idx += 2
@@ -240,14 +261,6 @@ class WikiText():
                 if '|' in part:
                     second = part.split('|')[1].strip(']')
                     text = text.replace(part, second)
-            
-            #We're gonna remove the HTML-like tags.
-            text = re.sub("<!-+(.*?)-+>", '', text, flags=re.DOTALL)
-            #regex_ref = r'<'+re.escape('ref')+r'>.*?<'+re.escape('/ref')+r'>'
-            #text = re.sub(regex_ref, '',text)
-            text = re.sub("<(.*?)>(.*?)</(.*?)>", '', text, flags=re.DOTALL)
-            text = re.sub(r'<.*?>', '', text)
-            #text = re.sub("<(.*?)>(.|\n)*?</(.*?)>", '', text)
 
             #We're gonna remove the wandering brackets.
             text = text.replace('[[','').replace(']]','')
@@ -255,18 +268,6 @@ class WikiText():
             #Then we're gonna remove all the links in the text.
             #text = re.sub(r'http+', '', text) #p\S
             text = re.sub(r'https?:\/\/.*[\r\n]*', '', text, flags=re.MULTILINE)
-            
-            #Remove the part after 'IGNORE_SECTION'.
-
-            _id = []
-            for part in re.findall(r'=+(.*?)=+', text):
-                if part.lower().strip() in self.IGNORE_SECTION:
-                    _id.append(text.find(part))
-                else:
-                    continue
-
-            if len(_id) != 0:
-                text = text[:min(_id)]
             
             #Remove headlines, we don't need them.
             regex_symbol = re.compile(r'=+(.*?)=+')
@@ -280,7 +281,7 @@ class WikiText():
 
             #Remove the symbols we don't need.
 
-            symbols = ["'", "{", "}", "*", '"', "(", ")", "[", "]"]
+            symbols = ["'", "{", "}", "*", '#', '"', "()", "[", "]"]
             for symbol in symbols:
                 text = text.replace(symbol, '')
 
@@ -296,10 +297,14 @@ class WikiText():
             
             #New line and space remover, the data must be plain text.
             line_regex = re.compile(r'\n+')
-            space_regex = re.compile(r'\s+')
+            space_regex = re.compile(r'\s\s+')
 
             text = re.sub(line_regex, ' ', text)
             text = re.sub(space_regex, ' ', text)
+
+            #Removing the meaningless tags.
+            text = re.sub(r'<(.*?)>', '', text)
+            text = text.replace('&ndash;', '-')
             
             #Removing the trailing spaces, if there is any.
             text = text.lstrip(' ').rstrip(' ')
