@@ -76,7 +76,8 @@ class WikiText():
         self.IGNORE_SECTION = ['reference', 'Reference', 'References', 'references', 'REFERENCE', 'REFERENCES',
                                'see also', 'See also', 'See Also', 'SEE ALSO', 'see Also',
                                'completed', 'Completed', 'COMPLETED',
-                               'track listing']
+                               'track listing',
+                               'gallery']
         self.IGNORE_REDIRECTS = ['#REDIRECT', '#redirect', '#Redirect']
         self.ENTITIES = ['&nbsp;', '&lt;', '&gt;', '&amp;', '&quot;',	
         '&apos;', '&cent;', '&pound;', '&yen;' '&euro;', '&copy;', '&reg;']
@@ -178,49 +179,22 @@ class WikiText():
 
             # ==CURLY BRACKET REMOVER== # 
 
-            idx = -1 #Starting from -1 in order to begin indexing from 0 at the beginning of our for loop. "idx += 1"
-            open_curly = 0 #Open curly count
-            closed_curly = 0 #Closed curly count
-            open_idx = {} #Open curlies and indexes.
-            closed_idx = {} #Closed curlies and indexes.
-            
-            _seperated = []
-            _equals = []
-            
-            SEPERATOR = False
-            
-            for letter in text:
-                idx += 1
-                if letter == '{':
-                    open_curly += 1 #Incrementing the open_curly.
-                    open_idx.update({open_curly:idx})
-                    SEPERATOR = True
-                elif letter == '}':
-                    closed_curly += 1 #Incrementing the closed_curly.
-                    closed_idx.update({closed_curly:idx})
-                    SEPERATOR = False
-                else:
-                    continue
-                #For getting the same nested curly bracket.
-                if open_curly == closed_curly:
-                    _equals.append(idx)
-                    SEPERATOR = False
-                
-                elif (open_curly == closed_curly + 1) and SEPERATOR:
-                    _seperated.append(idx)
-                else:
-                    continue
-            
-            #Removing the curly bracket sections and the text inside.
-            _temp = list(text)
-            for k, v in zip(_seperated[::-1], _equals[::-1]):
-                start_idx = k
-                end_idx = v+1
-                del _temp[start_idx:end_idx]
-            text = ''.join(_temp)
+            def remove_nested_curly(text):
+                stringus = ''
+                bumble = 0
+                for i in text:
+                    if i == '{':
+                        bumble += 1
+                    elif i == '}'and bumble > 0:
+                        bumble -= 1
+                    elif bumble == 0:
+                        stringus += i
+                return stringus
+            text = remove_nested_curly(text)
 
             #Remove HTML-like tag pairs.
-            text = re.sub("<(.*?)>(.*?)<\/(.*?)>", '', text, flags=re.DOTALL)
+            text = re.sub("<(.*?)>(.*?)<\/(.*?)>", '', text, flags=re.MULTILINE)
+            text = re.sub(r'<(.*?)>', '', text)
             
             #Checks the page and removes extra contents such as files and categories.
             for extra in self.IGNORE_THE_EXTRA_CONTENT:
@@ -303,13 +277,11 @@ class WikiText():
             text = re.sub(space_regex, ' ', text)
 
             #Removing the meaningless tags.
-            text = re.sub(r'<(.*?)>', '', text)
             text = text.replace('&ndash;', '-')
             
             #Removing the trailing spaces, if there is any.
             text = text.lstrip(' ').rstrip(' ')
 
-            
             title = title
             self.plain_text.update({title:[id,text]})
         return self.plain_text
