@@ -3,7 +3,7 @@ import xml.dom.minidom
 import re
 from multiprocessing import Queue, get_context, cpu_count
 import logging
-from timeit import default_timer
+from time import perf_counter
 import sys
 import os
 from io import StringIO
@@ -17,19 +17,19 @@ input_file = 'enwiki-20230901-pages-articles-multistream11.xml-p6899367p7054859'
 class WikiText():
 
     #Constructing a class which handles everything.
-
     def __init__(self, file):
 
         self.file = file
-        self.domtree = xml.dom.minidom.parse(self.file)
-        self.group = self.domtree.documentElement
-        self.elements = self.group.getElementsByTagName('page')
+        self.elements = xml.dom.minidom.parse(self.file).documentElement.getElementsByTagName('page')
+        
+        #self.group = self.domtree.documentElement
+        #self.elements = self.group.getElementsByTagName('page')
 
         self.dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        self.titles = []
-        self.texts = []
-        self.ids = []
+        #self.titles = []
+        #self.texts = []
+        #self.ids = []
         self.plain_text = {}
 
         self.extraction = {}
@@ -73,20 +73,31 @@ class WikiText():
         self.LANGUAGE_CODES_BETWEEN_COLONS = [(":"+x+":") for x in self.LANGUAGE_CODES]
 
         self.IGNORE_THE_EXTRA_CONTENT = ['[[File:', '[[Category:', '[[Image:']
-        self.IGNORE_SECTION = ['reference', 'Reference', 'References', 'references', 'REFERENCE', 'REFERENCES',
-                               'see also', 'See also', 'See Also', 'SEE ALSO', 'see Also',
-                               'completed', 'Completed', 'COMPLETED',
+        self.IGNORE_SECTION = ['reference', 'references',
+                               'see also',
+                               'completed',
                                'track listing',
                                'gallery']
         self.IGNORE_REDIRECTS = ['#REDIRECT', '#redirect', '#Redirect']
         self.ENTITIES = ['&nbsp;', '&lt;', '&gt;', '&amp;', '&quot;',	
         '&apos;', '&cent;', '&pound;', '&yen;' '&euro;', '&copy;', '&reg;']
 
-        print('Initialization completed!')
+        #OUTPUT FILES
+        self.output_files = [x for x in 'abcdefghijklmnopqrstuvwxyz0123456789']
+
+        logging.info('Initialization completed!')
 
     def split_page(self, chunk=False):
 
-        CHUNK_SIZE = 9
+        #Splits the entire page into smaller pages.
+
+        """
+        
+        :params chunk (bool): For debugging purpose. False (default).
+
+        """
+
+        CHUNK_SIZE = 50
 
         if chunk:
             _ = sample(self.elements, CHUNK_SIZE)
@@ -105,33 +116,32 @@ class WikiText():
             else:
                 #Get the text, nothing else.
                 if ns == '0':
-                #if ('File:' not in title) and ('Article:' not in title) and ('Category:' not in title) and ('Wikipedia:' not in title) and ('Template:' not in title):
-                    self.titles.append(title)
-                    self.texts.append(text)
-                    self.ids.append(id)
+                    #self.titles.append(title)
+                    #self.texts.append(text)
+                    #self.ids.append(id)
 
                     self.extraction.update({id:[title, text]})
                 else:
                     pass
 
-        print('XML has splitted, total page number is: ', self.length)
+        logging.info('XML has splitted, total page number is: %d', self.length)
               
-        return self.titles, self.ids, self.texts
+        return self.extraction
 
     #This is for debugging purpose.
     def check_by_id(self, xid):
         
         for idx, title_text in self.extraction.items():
             if xid == idx:
-                print("Checked by ID: ", title_text[1])
+                logging.info('Checked by ID: %s', title_text[1])
 
     def clean_by_id(self, xid):
 
         for idx, title_text in self.extraction.items():
             if xid == idx:
-                print('Cleaning by ID: ', xid)
+                logging.info('Cleaning by ID: %s', xid)
                 temp_dict = self.cleaning_text(chunk=False, by_id=True, one_id = xid)
-                print(temp_dict)
+                logging.info('Cleaned data: %s', temp_dict)
 
     def cleaning_text(self, chunk=False, by_id=False, one_id=0):
 
@@ -143,21 +153,23 @@ class WikiText():
         :output plain_text (dict): {'id': ['title', 'text']}
         """
 
-        titles = []
-        texts = []
-        ids = []
-
-        plain_text = {}
+        self.plain_text.clear()
+        ids, titles, texts = ([] for x in range(3))
 
         if by_id:
 
             titles.append(self.extraction[one_id][0])
             texts.append(self.extraction[one_id][1])
             ids.append(one_id)
-        else:    
-            
-            titles, ids, texts = self.split_page(chunk)
 
+        else:    
+
+            _ = self.split_page()
+            ids = list(_.keys())[:]
+            titles = [d[0] for d in _.values()][:]
+            texts = [d[1] for d in _.values()][:]
+        print("PART OF TITLES: ",titles[:5])
+        print("PART OF IDS: ", ids[:5])
         for title, id, text in zip(titles, ids, texts):
 
             #We're gonna remove the HTML-like tags.
@@ -286,26 +298,72 @@ class WikiText():
             self.plain_text.update({title:[id,text]})
         return self.plain_text
     
-    def write_out(self, _json=False):
+    def write_out(self, _json=True):
 
-        file_path_csv = self.dir_path + '/plain.csv'
-        file_path_json = self.dir_path + '/plain.json'
-        if _json:
+        #Get the dictionary.
+        out = self.cleaning_text()
 
-            with open(file_path_json, 'w') as j:
-                json.dump(self.plain_text, j, indent=2, ensure_ascii=False)
-                j.write('\n')
-        else:
+        #Example: /Users/user/Desktop/project/bundle
+        root_path = 'bundle'
+        output_path = os.path.join(self.dir_path, root_path)
+        
+        #ALL TITLES, IDS, TEXTS from the dictionary copied below.
+        _titles = list(out.keys())[:]
+        _ids = [d[0] for d in out.values()]
+        _texts = [d[1] for d in out.values()]
 
-            with open(file_path_csv, 'w', newline='') as f:
-                w = csv.DictWriter(f, self.plain_text.keys())
-                w.writeheader()
-                w.writerow(self.plain_text)
+        #This list will be used to check if the 'page' name starts with a numerical value.
+        #[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        #_numeric = [str(x) for x in range(0,10)]
 
+        #Iterations begins with the first letter of 'a' till the end of numericals which is '9'.
+        for i in self.output_files:
+
+            #We generate file names for each initial.
+            path_json = output_path + '/' + i + '.json'
+            path_csv = output_path + '/' + i + '.csv'
+
+            #id_list for the letter we match for each iteration.
+            id_list = [y for x, y in zip(_titles, _ids) if x[0].lower() == i] 
+
+            #Output file, will be written out.
+            TEMP_DICT = {}
+
+            #Check every page and add it into the 'TEMP_DICT' if the id has a match in our id_list.
+            for dt, di, de in zip(_titles, _ids, _texts):
+                if di in id_list:
+                    TEMP_DICT.update({dt:[di, de]})
+
+            #Check if our directory contains the 'root path' which is 'bundle' in this case. Make sure it's there.
+            if root_path not in os.listdir(self.dir_path):
+                os.makedirs(os.path.join(self.dir_path, root_path))
+            else:
+                pass    
+
+            if _json:
+                with open(path_json, 'w') as j:
+                    json.dump(TEMP_DICT, j, indent=2, ensure_ascii=False)
+                    j.write('\n')
+            else:
+                with open(path_csv, 'w', newline='') as f:
+                    w = csv.DictWriter(f, TEMP_DICT.keys())
+                    w.writeheader()
+                    w.writerow(TEMP_DICT)
+            logging.info('Dump was successful to %s', output_path)
+            
+            TEMP_DICT.clear() 
+  
 def main():    
+    start = perf_counter()
     App = WikiText(input_file)
-    extracted_file = App.cleaning_text()
-    App.write_out(_json=True)
+    #extracted_file = App.cleaning_text()
+    #App.write_out(_json=True)
+    App.write_out()
+    end = perf_counter()
+
+    print("Process took %.2f seconds.", end-start)
+
+    logging.info("Process took %.2f seconds.", end-start)
 
 
 if __name__ == '__main__':
