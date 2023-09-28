@@ -5,7 +5,7 @@ scientific chunk, sports chunk.
 
 <b>Input file:</b> wikimedia xls file which can be found on [Wikimedia Dumps](https://dumps.wikimedia.org/enwiki/).
 
-<b>Output file:</b> csv, json.
+<b>Output file:</b> SQLite database.
 
 ## Potential Improvements:
 
