@@ -11,15 +11,16 @@ Extractipedia aims to create plain text Wikipedia pages in order to create faiss
 ```
 python3 extractipedia.py [-f] file_name 
 ```
+```
+[-f] ==> File Name(str): Name of the Wikipedia Dump File (.xml)
+```
 ### Additional Arguments:
 
 ```
 python3 extractipedia.py [-f] file_name [-b] batch_size [-d] database_file
 [-t] table_name [-w] num_workers [-s] first_sentence
 ```
-
 ```
-[-f] ==> File Name(str): Name of the Wikipedia Dump File (.xml)
 [-b] ==> Batch Size(int): RAM usage increases as the batch size gets bigger. (default = 2500)
 [-d] ==> Database File(str): Name of the SQLite database. The script will create for you if the file does not exist. (default = 'new_database.db')
 [-t] ==> Table Name(str): Name of the table for the database above. It will be created if it does not exist. (default = 'new_table')
