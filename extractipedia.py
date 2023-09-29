@@ -1,6 +1,6 @@
 import queue
 from xml.etree.ElementTree import iterparse
-from util2 import *
+from util import *
 from time import perf_counter
 from gc import collect
 import multiprocessing
