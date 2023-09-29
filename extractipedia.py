@@ -1,16 +1,11 @@
 import queue
 from xml.etree.ElementTree import iterparse
-from util import *
+from util2 import *
 from time import perf_counter
 from gc import collect
 import multiprocessing
 from multiprocessing import cpu_count
-
-WIKI_FILE = 'enwiki-20230901-pages-articles-multistream11.xml-p6899367p7054859'
-ANOTHER_WIKI = 'enwiki-20230920-pages-articles-multistream9.xml-p2936261p4045402'
-
-database_file = 'wikimedia.db'
-table_name = 'pages'
+import argparse
 
 class WikiText:
 
@@ -30,8 +25,8 @@ class WikiText:
         idx = k = string.rfind('}')
         if idx != -1:
             string = string[idx + 1:]
-        return string 
-    
+        return string  
+
     def __iter__(self):
         return self
 
@@ -111,17 +106,22 @@ class WikiText:
         
         raise StopIteration
 
-def process_batch(batch):
-    result = cleaning_text(batch)
+def process_batch(batch, database_file, table_name, first_sentence):
+    result = cleaning_text(batch, first_sentence)
     update_sqlite_table_with_dict(database_file, table_name, result)
 
 class BatchProcessor:
-    def __init__(self, max_queue_size, process_func, num_workers):
+    def __init__(self, max_queue_size, process_func, num_workers, database_file, table_name, first_sentence):
         self.max_queue_size = max_queue_size
         self.batch_queue = multiprocessing.Queue(maxsize=max_queue_size)
         self.process_func = process_func
         self.num_workers = num_workers
         self.stop_event = multiprocessing.Event()
+
+        self.database_file = database_file
+        self.table_name = table_name
+
+        self.first_sentence = first_sentence
 
     def process_batches(self, data_generator):
         producer_process = multiprocessing.Process(target=self._produce_batches, args=(data_generator,))
@@ -151,7 +151,7 @@ class BatchProcessor:
                     break  # Exit the loop when sentinel value is received
 
                 # Process the batch using the provided function
-                self.process_func(batch)
+                self.process_func(batch, self.database_file, self.table_name, self.first_sentence)
             except queue.Empty:
                 pass
             except Exception as e:
@@ -162,17 +162,33 @@ class BatchProcessor:
 
 if __name__ == "__main__":
 
-    start_time = perf_counter()
+    parser = argparse.ArgumentParser(description='Extractipedia')
+    parser.add_argument("-f", "--file_name", type=str, help="XML File Name")
+    parser.add_argument("-b", "--batch_size", type=int, default=2500, help="Batch Size (default=2500)")
+    parser.add_argument("-d", "--database_file", type=str, default='new_database.db', help="Database Name (default=new_database.db)")
+    parser.add_argument("-t", "--table_name", type=str, default='new_table', help="Table Name (default=new_table)")
     num_workers = cpu_count() - 2
-    max_queue_size = 8
+    max_workers = cpu_count()
+    parser.add_argument("-w", "--num_workers", type=int, default=num_workers, help=f"Number of Workers: (default={num_workers}, max={max_workers}). How many cores do you want to use? It is advisable that you should at least exclude 1 core in order to give your machine breathing room. Max is the core number your machine has.")
+    parser.add_argument("-s", "--first_sentence", type=bool, default=False, help="True, if you need just the first sentence. (default=False)")
+    args = parser.parse_args()
 
-    batch_processor = BatchProcessor(max_queue_size, process_func=process_batch, num_workers=num_workers)
+    logging.info(f'File Name: {args.file_name}')
+    logging.info(f'Number of Workers: {args.num_workers}')
+    logging.info(f'Batch Size: {args.batch_size}')
+    logging.info(f'Database Name: {args.database_file}')
+    logging.info(f'Table Name: {args.table_name}')
+    logging.info(f'First Sentence? -{args.first_sentence}')
 
-    batch_size = 1500
-    generator = WikiText(ANOTHER_WIKI, batch_size)
+    start_time = perf_counter()
+
+    max_queue_size = 12
+
+    batch_processor = BatchProcessor(max_queue_size, process_func=process_batch, num_workers=args.num_workers, database_file=args.database_file, table_name=args.table_name, first_sentence=args.first_sentence)
+    generator = WikiText(args.file_name, args.batch_size)
 
     batch_processor.process_batches(generator)
 
     bed_time = perf_counter()
 
-    print(f'It took exactly {bed_time - start_time} seconds.')
+    logging.info(f'It took exactly {bed_time-start_time:.2f} seconds.')

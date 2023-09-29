@@ -1,4 +1,3 @@
-import os
 import re
 import json
 import pickle
@@ -27,7 +26,9 @@ def table_exists(cursor, table_name):
     return cursor.fetchone() is not None    
     
 def update_sqlite_table_with_dict(database_file, table_name, data_dict):
+
     try:
+
         # Connect to the SQLite database
         conn = sqlite3.connect(database_file)
         cursor = conn.cursor()
@@ -48,7 +49,6 @@ def update_sqlite_table_with_dict(database_file, table_name, data_dict):
             
             # Execute the SQL statement with the current key and serialized value
             cursor.execute(update_sql, (key, value_json))
-        
         # Commit the changes to the database
         conn.commit()
 
@@ -56,7 +56,7 @@ def update_sqlite_table_with_dict(database_file, table_name, data_dict):
         cursor.close()
         conn.close()
 
-        print("Data updated successfully.")
+        print(f"Data updated successfully.")
     
     except sqlite3.Error as e:
         print(f"SQLite error: {e}")
@@ -92,7 +92,27 @@ def retrieve_data_from_sqlite(database_file, table_name):
 
     return data_dict    
 
-def cleaning_text(list_of_dicts):
+def get_first_sentence(text):
+    #This function is for getting the first sentence of the text.
+    #In this way, we can create a small size index. (Ideal)
+    #The column will be used during the faiss-index creation.
+
+    """
+    :params text (dict): Main dict, must be used after self.cleaning_text()
+    """
+
+
+    fs_regex = re.compile(r'\.\s[A-Z].+', flags=re.MULTILINE)
+    fixed_text = re.sub(fs_regex, '', text) + '.'
+    fs_check = re.compile(r'\.\s+,\s*[a-z]')
+    checked = re.search(fs_check, fixed_text)
+    if checked:
+        part = checked.group(0)
+        replacement = '. ' + part[-1].upper()
+        fixed_text = fixed_text.replace(part, replacement)
+    return fixed_text    
+
+def cleaning_text(list_of_dicts, first_sentence=False):
 
     try:
 
@@ -205,8 +225,13 @@ def cleaning_text(list_of_dicts):
             #Removing the trailing spaces, if there is any.
             text = text.lstrip(' ').rstrip(' ')
             title = title
-            plain_text.update({title:[id,text]})
 
+            if first_sentence:
+
+                text = get_first_sentence(text)
+
+            plain_text.update({title:[id,text]})
+   
         return plain_text    
     except Exception as e:
         print(e) 
