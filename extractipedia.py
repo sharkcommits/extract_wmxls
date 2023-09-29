@@ -169,16 +169,16 @@ if __name__ == "__main__":
     parser.add_argument("-t", "--table_name", type=str, default='new_table', help="Table Name (default=new_table)")
     num_workers = cpu_count() - 2
     max_workers = cpu_count()
-    parser.add_argument("-w", "--num_workers", type=int, default=num_workers, help=f"Number of Workers: (default={num_workers}, max={max_workers}). How many cores do you want to use? It is advisable that you should at least exclude 1 core in order to give your machine breathing room. Max is the core number your machine has.")
-    parser.add_argument("-s", "--first_sentence", type=bool, default=False, help="True, if you need just the first sentence. (default=False)")
+    parser.add_argument("-n", "--num_workers", type=int, default=num_workers, help=f"Number of Workers: (default={num_workers}, max={max_workers}). How many cores do you want to use? It is advisable that you should at least exclude 1 core in order to give your machine breathing room. Max is the core number your machine has.")
+    parser.add_argument("-s", "--first_sentence", action="store_true", default=False, help="If you include [-s] while executing the script, it'll only write out the first sentences of the pages to the database.")
     args = parser.parse_args()
 
     logging.info(f'File Name: {args.file_name}')
-    logging.info(f'Number of Workers: {args.num_workers}')
     logging.info(f'Batch Size: {args.batch_size}')
     logging.info(f'Database Name: {args.database_file}')
     logging.info(f'Table Name: {args.table_name}')
-    logging.info(f'First Sentence? -{args.first_sentence}')
+    logging.info(f'Number of Workers: {args.num_workers}')
+    logging.info(f'First Sentence: {args.first_sentence}')
 
     start_time = perf_counter()
 
