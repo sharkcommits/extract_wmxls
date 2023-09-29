@@ -12,20 +12,29 @@ Extractipedia aims to create plain text Wikipedia pages in order to create faiss
 python3 extractipedia.py [-f] file_name 
 ```
 ```
-[-f] ==> File Name(str): Name of the Wikipedia Dump File (.xml)
+[-f, --file_name] ==> File Name(str): Name of the Wikipedia Dump File (.xml)
 ```
-### Additional Arguments:
+## Tuning the Script:
 
 ```
 python3 extractipedia.py [-f] file_name [-b] batch_size [-d] database_file
 [-t] table_name [-w] num_workers [-s] first_sentence
 ```
+
+### Additional Arguments:
+
 ```
-[-b] ==> Batch Size(int): RAM usage increases as the batch size gets bigger. (default = 2500)
-[-d] ==> Database File(str): Name of the SQLite database. The script will create for you if the file does not exist. (default = 'new_database.db')
-[-t] ==> Table Name(str): Name of the table for the database above. It will be created if it does not exist. (default = 'new_table')
-[-w] ==> Number of Workers(int): Each process runs on different core. So the maximum process number equals to the cores that your machine has. But it is advisable that you should at least exclude 1 core in order to give your machine breathing room. You can give the core number directly. (default = -2)
-[-s] ==> First Sentence(bool): If you need just the first sentence of a page. Change it to True. It's faster and memory-friendly. (default = False)
+[-b, --batch_size] ==> Batch Size(int): RAM usage increases as the batch size gets bigger. (default = 2500)
+[-d, --database_file] ==> Database File(str): Name of the SQLite database. The script will create for you if the file does not exist. (default = 'new_database.db')
+[-t, --table_name] ==> Table Name(str): Name of the table for the database above. It will be created if it does not exist. (default = 'new_table')
+[-w, --num_workers] ==> Number of Workers(int): Each process runs on different core. So the maximum process number equals to the cores that your machine has. But it is advisable that you should at least exclude 1 core in order to give your machine breathing room. You can give the core number directly. (default = -2)
+[-s, --first_sentence] ==> First Sentence(bool): If you need just the first sentence of a page. Change it to True. It's faster and memory-friendly. (default = False)
+```
+
+### Getting Help:
+
+```
+[-h, --help] ==> It will print out the necessary information.
 ```
 
 ## Potential Improvements:
