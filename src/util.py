@@ -11,7 +11,7 @@ ENTITIES = ['&nbsp;', '&lt;', '&gt;', '&amp;', '&quot;',
 IGNORE_SECTION = ['reference', 'references', 'see also', 'completed',
                   'track listing', 'gallery', '<gallery>']
 
-IGNORE_THE_EXTRA_CONTENT = ['[[File:', '[[Category:', '[[Image:']
+IGNORE_THE_EXTRA_CONTENT = ['[[File:', '[[Category:', '[[Image:', '[[Category:']
 
 #Checks the object if it's picklable or not. (:_:DEBUGGING PURPOSE:_:)
 def is_picklable(obj):
@@ -55,8 +55,6 @@ def update_sqlite_table_with_dict(database_file, table_name, data_dict):
         # Close the cursor and connection
         cursor.close()
         conn.close()
-
-        print(f"Data updated successfully.")
     
     except sqlite3.Error as e:
         print(f"SQLite error: {e}")
@@ -112,13 +110,7 @@ def get_first_sentence(text):
         fixed_text = fixed_text.replace(part, replacement)
     return fixed_text    
 
-def cleaning_text(list_of_dicts, first_sentence=False):
-
-    try:
-
-        plain_text = {}
-
-        def remove_nested_curly(text):
+def remove_nested_curly(text):
             stringus = ''
             bumble = 0
             for i in text:
@@ -129,6 +121,12 @@ def cleaning_text(list_of_dicts, first_sentence=False):
                 elif bumble == 0:
                     stringus += i
             return stringus
+
+def cleaning_text(list_of_dicts, first_sentence=False):
+
+    try:
+
+        plain_text = {}
 
         """
         :params chunk (bool): If True, randomly extracts pages by chunk size. For debugging purposes. (default: False)
@@ -148,8 +146,8 @@ def cleaning_text(list_of_dicts, first_sentence=False):
             text = text[:min(_id)] if len(_id) != 0 else text
 
             # ==CURLY BRACKET REMOVER== # 
-
             text = remove_nested_curly(text)
+            
             #Remove HTML-like tag pairs.
             text = re.sub("<(.*?)>(.*?)<\/(.*?)>", '', text, flags=re.MULTILINE)
             text = re.sub(r'<(.*?)>', '', text)
