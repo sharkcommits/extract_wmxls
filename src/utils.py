@@ -59,44 +59,16 @@ def update_sqlite_table_with_dict(database_file, table_name, data_dict):
     except sqlite3.Error as e:
         print(f"SQLite error: {e}")
     except Exception as e:
-        print(f"Error: {e}")    
-    
-def retrieve_data_from_sqlite(database_file, table_name):
-    data_dict = {}
-    try:
-        # Connect to the SQLite database
-        conn = sqlite3.connect(database_file)
-        cursor = conn.cursor()
-
-        # Retrieve data from the database
-        cursor.execute(f"SELECT key, value FROM {table_name}")
-        for key, value_json in cursor.fetchall():
-            # Deserialize the JSON back to a list
-            value_list = json.loads(value_json)
-            data_dict[key] = value_list
-        
-        print("Data retrieved successfully.")
-    
-    except sqlite3.Error as e:
-        print(f"SQLite error: {e}")
-    except Exception as e:
-        print(f"Error: {e}")
-    finally:
-        # Close the cursor and connection in the finally block
-        if cursor:
-            cursor.close()
-        if conn:
-            conn.close()
-
-    return data_dict    
+        print(f"Error: {e}")       
 
 def get_first_sentence(text):
+
     #This function is for getting the first sentence of the text.
     #In this way, we can create a small size index. (Ideal)
     #The column will be used during the faiss-index creation.
 
     """
-    :params text (dict): Main dict, must be used after self.cleaning_text()
+    :params text (str): Text to be stripped.
     """
 
 
@@ -124,13 +96,15 @@ def remove_nested_curly(text):
 
 def cleaning_text(list_of_dicts, first_sentence=False):
 
+    """
+    :params list_of_dicts: List of dicts to be cleaned.
+    :params first_sentence: If True, only the first sentence of the text will be returned.
+    """
+
     try:
 
         plain_text = {}
 
-        """
-        :params chunk (bool): If True, randomly extracts pages by chunk size. For debugging purposes. (default: False)
-        """
         titles, ids, texts = ([] for x in range(3))
 
         titles = [key for d in list_of_dicts for key in d.keys()]
@@ -202,10 +176,7 @@ def cleaning_text(list_of_dicts, first_sentence=False):
                 text = re.sub(special, '', text)
             #Remove the symbols we don't need.
             symbols = ["'", "{", "}", "*", '#', '"', "[", "]"] #() EKLE
-            """
-            for symbol in symbols:
-                text = text.replace(symbol, '')
-            """
+
             text = text.translate({ord(ch):'' for ch in symbols}) #NEW
             text = text.replace('()', '') #NEW
             #Some additional regex for wikipedia format.

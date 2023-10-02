@@ -3,7 +3,7 @@
 
 #     =======================================================================
 # 
-#     Copyright (c) 2023  @sharkcommits (sharkcommits@protonmail.ch)
+#     Copyright (c) 2023  @sharkcommits (sharkcommits@protonmail.com)
 # 
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -30,11 +30,11 @@ from xml.etree.ElementTree import iterparse
 from time import perf_counter
 import multiprocessing
 from gc import collect
-from util import *
+from utils import *
 import argparse
 import queue
 
-__version__ = '0.0.1'
+__version__ = '0.1'
 
 class WikiText:
 
@@ -126,6 +126,13 @@ class WikiText:
 SENTINEL = 0
 
 def process_batch(batch, database_file, table_name, first_sentence, pages):
+
+    """
+    :params batch: chunks of data to be written to the database.
+    :params database_file: name of the database.
+    :params table_name: name of the table in the database.
+    :params pages: page count for every process.
+    """
     global SENTINEL
     if pages > SENTINEL:
         SENTINEL = pages

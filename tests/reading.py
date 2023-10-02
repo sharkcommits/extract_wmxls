@@ -3,7 +3,7 @@
 
 #     =======================================================================
 # 
-#     Copyright (c) 2023  @sharkcommits (sharkcommits@protonmail.ch)
+#     Copyright (c) 2023  @sharkcommits (sharkcommits@protonmail.com)
 # 
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ This file prints the first n items from the database like the following section:
 
 """
 import argparse
-from src.util import retrieve_data_from_sqlite
+from helper import retrieve_data_from_sqlite
 
 if __name__ == '__main__':
 
