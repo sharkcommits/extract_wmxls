@@ -38,7 +38,7 @@ This script prints the first n items from the database like the following sectio
 """
 import gc
 import argparse
-from .utils import retrieve_data_from_sqlite
+from extractipedia.utils import retrieve_data_from_sqlite, retrieve_page_number
 
 if __name__ == '__main__':
 
@@ -52,9 +52,11 @@ if __name__ == '__main__':
     try:
 
         result = retrieve_data_from_sqlite(args.database_file, args.table_name, args.chunk_size, args.random)
+        total_pages = retrieve_page_number(args.database_file, args.table_name)
         
         for key, value in result.items():
             print('='*10 + key + '='*10, value, sep='\n')
+        print(f"\nYou have successfully retrieved {args.chunk_size} PAGES, you've got TOTAL {total_pages} PAGES.\n")    
 
         del result
         _ = gc.collect()    

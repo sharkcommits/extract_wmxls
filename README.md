@@ -31,14 +31,14 @@ python -m extractipedia.Extraction -f file_name.xml -b batch_size -d database_fi
 
 ## Check out your database once it is created:
 
-You can check out your database with the command below.
+You can check out your database with the command below. CheckDatabase module is just for checking out.
 
 ```
 python -m extractipedia.CheckDatabase -f YOUR_DATABASE.db -t YOUR_TABLE -c chunk_size -r [random]
 ```
 
 ```
-(optional) [-c, --chunk_size] ==> Chunk Size(int): It will retrieve the first n items from your database and you can check out if there is any errors. (default = 10)
+(optional) [-c, --chunk_size] ==> Chunk Size(int): It will retrieve the first n items from your database, don't type a large number which you might run into a memory problem. (default = 10)
 (optional) [-r, --random] ==> Random(bool): If you want to retrieve random n items, just use -r flag. (default = False)
 ```
 

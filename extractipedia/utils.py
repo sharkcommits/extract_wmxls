@@ -83,8 +83,6 @@ def retrieve_data_from_sqlite(database_file, table_name, chunk_size, random=Fals
             # Deserialize the JSON back to a list
             value_list = json.loads(value_json)
             data_dict[key] = value_list
-        
-        print("Data retrieved successfully.")
     
     except sqlite3.Error as e:
         print(f"SQLite error: {e}")
@@ -93,11 +91,32 @@ def retrieve_data_from_sqlite(database_file, table_name, chunk_size, random=Fals
     finally:
         # Close the cursor and connection in the finally block.
         if cursor:
-            cursor.close()
+            cursor.close()   
         if conn:
-            conn.close()
+            conn.close()   
+    return data_dict     
 
-    return data_dict         
+def retrieve_page_number(database_file, table_name):
+    # Connect to your SQLite database
+    connection = sqlite3.connect(f'{database_file}')
+
+    # Create a cursor
+    cursor = connection.cursor()
+
+    # Define your SQL query with the COUNT function
+    query = f"SELECT COUNT(*) FROM {table_name}"
+
+    # Execute the query and fetch the result
+    cursor.execute(query)
+    count = cursor.fetchone()[0]
+
+    # Close the cursor and the database connection
+    cursor.close()
+    connection.close()
+
+    # Print the count
+    return count
+
 
 def get_first_sentence(text):
 

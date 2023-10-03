@@ -30,7 +30,7 @@ from xml.etree.ElementTree import iterparse
 from time import perf_counter
 import multiprocessing
 from gc import collect
-from .utils import *
+from extractipedia.utils import *
 import datetime
 import argparse
 import queue
