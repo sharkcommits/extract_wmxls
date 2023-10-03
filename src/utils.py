@@ -113,7 +113,7 @@ def cleaning_text(list_of_dicts, first_sentence=False):
 
 
         for title, id, text in zip(titles, ids, texts):
-            #We're gonna remove the HTML-like tags.
+
             text = re.sub("<!-+(.*?)-+>", '', text, flags=re.DOTALL)
             #Remove the part after 'IGNORE_SECTION'.
             _id = [text.find(part) for part in re.findall(r'=+(.*?)=+', text) if part.lower().strip() in IGNORE_SECTION]
@@ -175,10 +175,10 @@ def cleaning_text(list_of_dicts, first_sentence=False):
                 special = re.compile(entity)
                 text = re.sub(special, '', text)
             #Remove the symbols we don't need.
-            symbols = ["'", "{", "}", "*", '#', '"', "[", "]"] #() EKLE
+            symbols = ["'", "{", "}", "*", '#', '"', "[", "]"]
 
-            text = text.translate({ord(ch):'' for ch in symbols}) #NEW
-            text = text.replace('()', '') #NEW
+            text = text.translate({ord(ch):'' for ch in symbols})
+            text = text.replace('()', '')
             #Some additional regex for wikipedia format.
             text = re.sub(r'\n\|.*\n', "", text)
             text = re.sub(r'\|+(.*?)\|+', "", text)
@@ -193,7 +193,6 @@ def cleaning_text(list_of_dicts, first_sentence=False):
             
             #Removing the trailing spaces, if there is any.
             text = text.lstrip(' ').rstrip(' ')
-            title = title
 
             if first_sentence:
 
@@ -201,6 +200,7 @@ def cleaning_text(list_of_dicts, first_sentence=False):
 
             plain_text.update({title:[id,text]})
    
-        return plain_text    
+        return plain_text   
+     
     except Exception as e:
         print(e) 

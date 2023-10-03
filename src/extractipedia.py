@@ -31,6 +31,7 @@ from time import perf_counter
 import multiprocessing
 from gc import collect
 from utils import *
+import datetime
 import argparse
 import queue
 
@@ -229,4 +230,7 @@ if __name__ == "__main__":
 
     bed_time = perf_counter()
 
-    logging.info(f'It took exactly {bed_time-start_time:.2f} seconds.')
+    time_difference = round(bed_time - start_time)
+    formatted_time = str(datetime.timedelta(seconds=time_difference))
+
+    logging.info(f'It is done in {formatted_time} (hh:mm:ss).')

@@ -14,14 +14,14 @@ python3 extractipedia.py [-f] file_name
 ```
 [-f, --file_name] ==> File Name(str): Name of the Wikipedia Dump File (.xml)
 ```
-## Tuning into the Script:
+## Tuning into the Script (Advanced):
 
 ```
 python3 extractipedia.py [-f] file_name [-b] batch_size [-d] database_file
 [-t] table_name [-n] num_workers [-s] first_sentence
 ```
 
-### Additional Arguments:
+#### Additional Arguments:
 
 ```
 [-b, --batch_size] ==> Batch Size(int): RAM usage increases as the batch size gets bigger. (default = 2500)

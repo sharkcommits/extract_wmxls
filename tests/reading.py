@@ -20,22 +20,23 @@
 #
 #     INSTALLATION: 'pip3 install extractipedia'
 #
-#     USAGE: 'python3 extractipedia.py -f YOUR_FILE.xml'
+#     USAGE: 'python3 reading.py -f YOUR_DATABASE.db -t YOUR_TABLE'
 #
-#     HELP: 'python3 extractipedia.py --help' to get more information.
+#     HELP: 'python3 reading.py --help' to get more information.
 #
 #     =======================================================================
 
 
 """
 
-This file prints the first n items from the database like the following section:
+This script prints the first n items from the database like the following section:
 
-('title1', [id1, 'text1'])
-('title2', [id2, 'text2'])
-('title3', [id3, 'text3'])
+('title_1', [id_1, 'text_1'])
+('title_2', [id_2, 'text_2'])
+('title_n', [id_n, 'text_n'])
 
 """
+import gc
 import argparse
 from helper import retrieve_data_from_sqlite
 
@@ -44,15 +45,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Reading Database')
     parser.add_argument("-d", "--database_file", type=str, default='new_database.db')
     parser.add_argument("-t", "--table_name", type=str, default='new_table')
-    parser.add_argument("-c", "--chunk", type=int, default=10)
+    parser.add_argument("-c", "--chunk_size", type=int, default=10, help='Retrieve n pages from the database.')
+    parser.add_argument("-r", "--random", action="store_true", default=False, help='Selects random n pages. (default=False)')
     args = parser.parse_args()
 
     try:
 
-        result = list(retrieve_data_from_sqlite(database_file=args.database_file, table_name=args.table_name).items())[:args.chunk]
+        result = retrieve_data_from_sqlite(args.database_file, args.table_name, args.chunk_size, args.random)
         
-        for item in result:
-            print(item)
+        for key, value in result.items():
+            print('='*10 + key + '='*10, value, sep='\n')
+
+        del result
+        _ = gc.collect()    
 
     except Exception as e:
 
