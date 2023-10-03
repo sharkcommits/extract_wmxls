@@ -9,7 +9,7 @@ Extractipedia aims to create plain text Wikipedia pages in order to use indexing
 ## Basic Usage:
 
 ```
-python3 extractipedia.py [-f] file_name 
+python -m extractipedia.Extraction -f file_name.xml 
 ```
 ```
 [-f, --file_name] ==> File Name(str): Name of the Wikipedia Dump File (.xml)
@@ -17,8 +17,8 @@ python3 extractipedia.py [-f] file_name
 ## Tuning into the Script (Advanced):
 
 ```
-python3 extractipedia.py [-f] file_name [-b] batch_size [-d] database_file
-[-t] table_name [-n] num_workers [-s] first_sentence
+python -m extractipedia.Extraction -f file_name.xml -b batch_size -d database_file.db
+-t table_name -n num_workers -s [first_sentence]
 ```
 
 #### Additional Arguments:

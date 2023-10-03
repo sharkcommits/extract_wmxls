@@ -2,10 +2,9 @@ from setuptools import find_packages, setup
 
 setup(
     name = 'extractipedia',
-    version = '0.1',
+    version = '0.0.1',
     description = 'A simple tool that extracts plain text Wikipedia Pages to SQLite database.',
-    package_dir = {'':'src'},
-    packages = find_packages(where='src'),
+    packages = find_packages(),
     long_description = open('README.md').read(),
     long_description_content_type = 'text/markdown',
     url = 'https://github.com/sharkcommits/extractipedia',

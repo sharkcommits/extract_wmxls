@@ -18,11 +18,11 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-#     INSTALLATION: 'pip3 install extractipedia'
+#     INSTALLATION: 'pip install extractipedia'
 #
-#     USAGE: 'python3 reading.py -f YOUR_DATABASE.db -t YOUR_TABLE'
+#     USAGE: 'python -m extractipedia.CheckDatabase -f YOUR_DATABASE.db -t YOUR_TABLE'
 #
-#     HELP: 'python3 reading.py --help' to get more information.
+#     HELP: 'python -m extractipedia.CheckDatabase --help' to get more information.
 #
 #     =======================================================================
 
@@ -38,7 +38,7 @@ This script prints the first n items from the database like the following sectio
 """
 import gc
 import argparse
-from helper import retrieve_data_from_sqlite
+from .utils import retrieve_data_from_sqlite
 
 if __name__ == '__main__':
 

@@ -18,11 +18,11 @@
 #     You should have received a copy of the GNU General Public License
 #     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #
-#     INSTALLATION: 'pip3 install extractipedia'
+#     INSTALLATION: 'pip install extractipedia'
 #
-#     USAGE: 'python3 extractipedia.py -f YOUR_FILE.xml'
+#     USAGE: 'python -m extractipedia.Extraction -f YOUR_FILE.xml'
 #
-#     HELP: 'python3 extractipedia.py --help' to get more information.
+#     HELP: 'python -m extractipedia.Extraction --help' to get more information.
 #
 #     =======================================================================
 
@@ -30,12 +30,12 @@ from xml.etree.ElementTree import iterparse
 from time import perf_counter
 import multiprocessing
 from gc import collect
-from utils import *
+from .utils import *
 import datetime
 import argparse
 import queue
 
-__version__ = '0.1'
+__version__ = '0.0.1'
 
 class WikiText:
 
