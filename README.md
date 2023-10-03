@@ -6,6 +6,12 @@ Extractipedia aims to create plain text Wikipedia pages in order to use indexing
 
 <b>Output file:</b> SQLite database file.
 
+## Installation:
+
+```
+pip install extractipedia
+```
+
 ## Basic Usage:
 
 ```
