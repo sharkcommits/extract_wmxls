@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name = 'extractipedia',
-    version = '0.0.1',
+    version = '0.0.2',
     description = 'A simple tool that extracts plain text Wikipedia Pages to SQLite database.',
     packages = find_packages(),
     long_description = open('README.md').read(),

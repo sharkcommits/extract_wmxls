@@ -30,12 +30,13 @@ from xml.etree.ElementTree import iterparse
 from time import perf_counter
 import multiprocessing
 from gc import collect
-from extractipedia.utils import *
+from extractipedia.utils import cleaning_text, update_sqlite_table_with_dict
 import datetime
 import argparse
+import logging
 import queue
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 
 class WikiText:
 
